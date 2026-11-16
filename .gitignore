@@ -5,3 +5,4 @@ CMakeUserPresets.json
 /data/*.pbf
 /data/*.bin
 .DS_Store
+/.cache/

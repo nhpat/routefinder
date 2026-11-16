@@ -26,3 +26,4 @@ find_package(benchmark CONFIG REQUIRED)
 enable_testing()
 
 add_subdirectory(src/server)
+add_subdirectory(src/ingest)
