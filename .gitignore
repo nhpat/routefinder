@@ -1,0 +1,7 @@
+/build/
+/vcpkg/
+/vcpkg_installed/
+CMakeUserPresets.json
+/data/*.pbf
+/data/*.bin
+.DS_Store

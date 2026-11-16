@@ -1,0 +1,13 @@
+{
+  "name": "routefinder",
+  "version": "0.1.0",
+  "dependencies": [
+    "s2geometry",
+    "abseil",
+    "grpc",
+    "protobuf",
+    "libosmium",
+    "gtest",
+    "benchmark"
+  ]
+}
