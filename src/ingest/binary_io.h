@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 
+#include "src/ingest/graph.h"
 #include "src/ingest/place.h"
 
 namespace routefinder::io {
@@ -53,6 +54,31 @@ inline void WritePlaces(const std::string& path,
       detail::WriteString(out, key);
       detail::WriteString(out, value);
     }
+  }
+}
+
+// Layout: "RFGR" magic, u32 version, u64 node_count, u64 edge_count, then
+// node_count * (f64 lat, f64 lng), then edge_count * (u32 from, u32 to,
+// f64 weight_s).
+inline void WriteGraph(const std::string& path,
+                        const std::vector<GraphNode>& nodes,
+                        const std::vector<GraphEdge>& edges) {
+  std::ofstream out(path, std::ios::binary);
+  if (!out) throw std::runtime_error("could not open " + path + " for writing");
+
+  out.write("RFGR", 4);
+  detail::WriteU32(out, /*version=*/1);
+  detail::WriteU64(out, nodes.size());
+  detail::WriteU64(out, edges.size());
+
+  for (const GraphNode& n : nodes) {
+    detail::WriteDouble(out, n.lat);
+    detail::WriteDouble(out, n.lng);
+  }
+  for (const GraphEdge& e : edges) {
+    detail::WriteU32(out, e.from);
+    detail::WriteU32(out, e.to);
+    detail::WriteDouble(out, e.weight_s);
   }
 }
 
