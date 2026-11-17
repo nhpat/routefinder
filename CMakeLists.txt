@@ -27,3 +27,5 @@ enable_testing()
 
 add_subdirectory(src/server)
 add_subdirectory(src/ingest)
+add_subdirectory(src/index)
+add_subdirectory(tests)

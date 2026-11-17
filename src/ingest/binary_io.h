@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <cstring>
 #include <fstream>
 #include <stdexcept>
 #include <string>
@@ -30,6 +31,31 @@ inline void WriteString(std::ofstream& out, const std::string& s) {
   out.write(s.data(), static_cast<std::streamsize>(s.size()));
 }
 
+inline uint32_t ReadU32(std::ifstream& in) {
+  uint32_t v = 0;
+  in.read(reinterpret_cast<char*>(&v), sizeof(v));
+  return v;
+}
+
+inline uint64_t ReadU64(std::ifstream& in) {
+  uint64_t v = 0;
+  in.read(reinterpret_cast<char*>(&v), sizeof(v));
+  return v;
+}
+
+inline double ReadDouble(std::ifstream& in) {
+  double v = 0;
+  in.read(reinterpret_cast<char*>(&v), sizeof(v));
+  return v;
+}
+
+inline std::string ReadString(std::ifstream& in) {
+  const uint32_t len = ReadU32(in);
+  std::string s(len, '\0');
+  in.read(s.data(), static_cast<std::streamsize>(len));
+  return s;
+}
+
 }  // namespace detail
 
 // Layout: "RFPL" magic, u32 version, u64 count, then per place:
@@ -55,6 +81,38 @@ inline void WritePlaces(const std::string& path,
       detail::WriteString(out, value);
     }
   }
+}
+
+inline std::vector<Place> ReadPlaces(const std::string& path) {
+  std::ifstream in(path, std::ios::binary);
+  if (!in) throw std::runtime_error("could not open " + path + " for reading");
+
+  char magic[4];
+  in.read(magic, 4);
+  if (std::memcmp(magic, "RFPL", 4) != 0) {
+    throw std::runtime_error(path + " is not a valid places.bin file");
+  }
+  detail::ReadU32(in);  // version, unused for now
+  const uint64_t count = detail::ReadU64(in);
+
+  std::vector<Place> places;
+  places.reserve(count);
+  for (uint64_t i = 0; i < count; ++i) {
+    Place p;
+    p.id = detail::ReadU64(in);
+    p.lat = detail::ReadDouble(in);
+    p.lng = detail::ReadDouble(in);
+    p.name = detail::ReadString(in);
+    const uint32_t tag_count = detail::ReadU32(in);
+    p.tags.reserve(tag_count);
+    for (uint32_t t = 0; t < tag_count; ++t) {
+      std::string key = detail::ReadString(in);
+      std::string value = detail::ReadString(in);
+      p.tags.emplace_back(std::move(key), std::move(value));
+    }
+    places.push_back(std::move(p));
+  }
+  return places;
 }
 
 // Layout: "RFGR" magic, u32 version, u64 node_count, u64 edge_count, then
